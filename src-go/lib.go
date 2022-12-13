@@ -4,11 +4,15 @@ package main
 /*
 #include <stdint.h>
 typedef uint64_t Handle;
+
+typedef enum {
+  ss_ok,
+  ss_worksheet_error
+} ss_status;
 */
 import "C"
 
 import (
-	"log"
 	"strconv"
 	"unsafe"
 
@@ -28,7 +32,7 @@ func ss_open(filepath *C.char) C.Handle {
 	file := C.GoString(filepath)
 	ss, err := spreadsheet.Open(file)
 	if err != nil {
-		log.Fatalln(err)
+		return 0
 	}
 	handle := C.Handle(uintptr(unsafe.Pointer(&ss)))
 	workbooks[handle] = ss
@@ -43,13 +47,15 @@ func ss_add_sheet(h C.Handle) *C.char {
 }
 
 //export ss_add_row
-func ss_add_row(h C.Handle, sheet *C.char) C.uint32_t {
-	ss := workbooks[h]
-	sheet_name := C.GoString(sheet)
-	sh, _ := ss.GetSheet(sheet_name)
-	row := sh.AddRow()
+func ss_add_row(h C.Handle, sheet *C.char, row *C.uint32_t) C.ss_status {
+	sh, err := get_sheet(h, sheet)
+	if err != nil {
+		return C.ss_worksheet_error
+	}
+	r := sh.AddRow()
+	*row = C.uint32_t(r.RowNumber())
 
-	return C.uint32_t(row.RowNumber())
+	return C.ss_ok
 }
 
 //export ss_add_rows
@@ -88,19 +94,38 @@ func ss_save(ws C.Handle, filepath *C.char) {
 	wb.SaveToFile(C.GoString(filepath))
 }
 
-func get_cell(h C.Handle, sheet *C.char, cell *C.char) spreadsheet.Cell {
+//export ss_check_sheet
+func ss_check_sheet(h C.Handle, sheet *C.char) C.ss_status {
+	_, err := get_sheet(h, sheet)
+	if err != nil {
+		return C.ss_worksheet_error
+	}
+	return C.ss_ok
+}
+
+func get_sheet(h C.Handle, sheet *C.char) (spreadsheet.Sheet, error) {
 	ss := workbooks[h]
 	sheet_name := C.GoString(sheet)
-	sh, _ := ss.GetSheet(sheet_name)
-	c := sh.Cell(C.GoString(cell))
-	return c
+	return ss.GetSheet(sheet_name)
+}
+
+func get_cell(h C.Handle, sheet *C.char, cell *C.char) (spreadsheet.Cell, error) {
+	sh, err := get_sheet(h, sheet)
+	var c spreadsheet.Cell
+	if err == nil {
+		c = sh.Cell(C.GoString(cell))
+	}
+	return c, err
 }
 
 //export ss_set_cell_string
 func ss_set_cell_string(h C.Handle, sheet *C.char, cell, value *C.char) C.int32_t {
-	c := get_cell(h, sheet, cell)
-	id := c.SetString(C.GoString(value))
-	return C.int32_t(id)
+	c, err := get_cell(h, sheet, cell)
+	if err != nil {
+		return 1
+	}
+	c.SetString(C.GoString(value))
+	return 0
 }
 
 //export test_write_multi
@@ -114,8 +139,6 @@ func test_write_multi(h C.Handle, sheet *C.char, count C.int32_t, value *C.char)
 	}
 	return C.int32_t(0)
 }
-
-func nameToNumber() {}
 
 var workbooks = make(map[C.Handle]*spreadsheet.Workbook)
 

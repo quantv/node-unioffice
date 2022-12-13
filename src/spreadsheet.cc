@@ -1,6 +1,7 @@
 #include <node_api.h>
 #include <assert.h>
 #include <cstdlib>
+#include <cstdio>
 #include "../include/libspreadsheet.h"
 
 Handle get_handle(napi_env env, napi_value val){
@@ -25,6 +26,16 @@ char* get_string(napi_env env, napi_value val){
     napi_get_value_string_utf8(env, val, buff, len + 1, &len2);
     return buff;
 }
+const char* ss_status_code(ss_status s){
+    switch (s)
+    {
+        case ss_ok: return "ss_ok"; break;
+        case ss_worksheet_error: return "ss_worksheet_error"; break;
+        default:
+            return "ss_unknown";
+            break;
+    }
+}
 
 static napi_value New(napi_env env, napi_callback_info info){
     napi_status status;
@@ -47,7 +58,13 @@ static napi_value Open(napi_env env, napi_callback_info info){
     }
     
     char *file = get_string(env, args[0]);
-    status = napi_create_bigint_uint64(env, uint64_t(ss_open(file)), &r);
+    uint64_t hl = uint64_t(ss_open(file));
+    delete file;
+    if (hl == 0) {
+        napi_throw_error(env, "FILE_NOT_FOUND", "no such file or directory");
+        return NULL;
+    }
+    status = napi_create_bigint_uint64(env, hl, &r);
     assert(status == napi_ok);
     return r;
 }
@@ -131,11 +148,16 @@ static napi_value AddRow(napi_env env, napi_callback_info info){
     Handle wb = get_handle(env, args[0]);
     char *sheet_name = get_string(env, args[1]);
 
-    uint32_t row = ss_add_row(wb, sheet_name);
-
-    napi_create_uint32(env, row, &r);
-
+    uint32_t row;
+    ss_status rs = ss_add_row(wb, sheet_name, &row);
+    
     delete sheet_name;
+
+    if (rs != ss_ok){
+        napi_throw_error(env, ss_status_code(rs), "Add row failed");
+        return NULL;
+    }
+    napi_create_uint32(env, row, &r);
 
     return r;
 }
@@ -196,9 +218,37 @@ static napi_value AddCell(napi_env env, napi_callback_info info){
 
     return r;
 }
-static napi_value SetCellString(napi_env env, napi_callback_info info){
+
+
+static napi_value CheckSheet(napi_env env, napi_callback_info info){
     napi_status status;
     napi_value r;
+    
+    size_t argc = 2;
+    napi_value args[argc];
+    status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
+    assert(status == napi_ok);
+
+    if (argc < 2) {
+        napi_throw_type_error(env, NULL, "Wrong number of arguments");
+        return NULL;
+    }
+    
+    Handle wb = get_handle(env, args[0]);
+    char *sheet_name = get_string(env, args[1]);
+
+    ss_status rs = ss_check_sheet(wb, sheet_name);
+    delete sheet_name;
+
+    if (rs != ss_ok){
+        napi_throw_error(env, ss_status_code(rs), "Sheet not exist");
+        return NULL;
+    }
+    return r;
+}
+
+static napi_value SetCellString(napi_env env, napi_callback_info info){
+    napi_status status;
     
     size_t argc = 4;
     napi_value args[argc];
@@ -215,15 +265,15 @@ static napi_value SetCellString(napi_env env, napi_callback_info info){
     char *cell_name = get_string(env, args[2]);
     char *val = get_string(env, args[3]);
 
-    int32_t row = ss_set_cell_string(wb, sheet_name, cell_name, val);
+    int32_t rs = ss_set_cell_string(wb, sheet_name, cell_name, val);
 
-    napi_create_int32(env, row, &r);
-    
     delete sheet_name;
     delete cell_name;
     delete val;
 
-    return r;
+    assert(rs == 0);
+
+    return NULL;
 }
 
 static napi_value TestWrite(napi_env env, napi_callback_info info){
@@ -248,6 +298,9 @@ static napi_value TestWrite(napi_env env, napi_callback_info info){
 
     test_write_multi(wb, sheet_name, count, val);
 
+    delete sheet_name;
+    delete val;
+
     return NULL;
 }
 
@@ -265,6 +318,7 @@ static napi_value Init(napi_env env, napi_value exports){
         DECLARE_NAPI_METHOD("add_rows", AddRows),
         DECLARE_NAPI_METHOD("add_cell", AddCell),
         DECLARE_NAPI_METHOD("set_cell_string", SetCellString),
+        DECLARE_NAPI_METHOD("check_sheet", CheckSheet),
         DECLARE_NAPI_METHOD("test", TestWrite),
     };
     status = napi_define_properties(env, exports, sizeof(desc) / sizeof(*desc), desc);

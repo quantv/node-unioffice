@@ -31,6 +31,7 @@ const char* ss_status_code(ss_status s){
     {
         case ss_ok: return "ss_ok"; break;
         case ss_worksheet_error: return "ss_worksheet_error"; break;
+        case ss_save_failed: return "ss_save_failed"; break;
         default:
             return "ss_unknown";
             break;
@@ -105,6 +106,34 @@ static napi_value Save(napi_env env, napi_callback_info info){
     
     delete filepath;
 
+    return NULL;
+}
+static napi_value SavePdf(napi_env env, napi_callback_info info){
+    napi_status status;
+    
+    size_t argc = 3;
+    napi_value args[argc];
+    status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
+    assert(status == napi_ok);
+
+    if (argc < 3) {
+        napi_throw_type_error(env, NULL, "Wrong number of arguments");
+        return NULL;
+    }
+    
+    Handle wb = get_handle(env, args[0]);
+    char *sheet = get_string(env, args[1]);
+    char *filepath = get_string(env, args[2]);
+
+    ss_status rs = ss_save_pdf(wb, sheet, filepath);
+
+    delete filepath;
+    delete sheet;
+
+    if (rs != ss_ok){
+        napi_throw_error(env, ss_status_code(rs), "Save failed");
+        return NULL;
+    }
     return NULL;
 }
 static napi_value AddSheet(napi_env env, napi_callback_info info){
@@ -312,6 +341,7 @@ static napi_value Init(napi_env env, napi_value exports){
         DECLARE_NAPI_METHOD("new", New),
         DECLARE_NAPI_METHOD("open", Open),
         DECLARE_NAPI_METHOD("save", Save),
+        DECLARE_NAPI_METHOD("save_pdf", SavePdf),
         DECLARE_NAPI_METHOD("close", Close),
         DECLARE_NAPI_METHOD("add_sheet", AddSheet),
         DECLARE_NAPI_METHOD("add_row", AddRow),

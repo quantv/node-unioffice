@@ -7,7 +7,8 @@ typedef uint64_t Handle;
 
 typedef enum {
   ss_ok,
-  ss_worksheet_error
+  ss_worksheet_error,
+  ss_save_failed
 } ss_status;
 */
 import "C"
@@ -17,6 +18,7 @@ import (
 	"unsafe"
 
 	"github.com/unidoc/unioffice/spreadsheet"
+	"github.com/unidoc/unioffice/spreadsheet/convert"
 )
 
 //export ss_new
@@ -90,8 +92,26 @@ func ss_close(h C.Handle) {
 func ss_save(ws C.Handle, filepath *C.char) {
 	wb := workbooks[ws]
 	defer wb.Close()
-	defer delete(workbooks, ws) //freeup memory
+	defer delete(workbooks, ws)
 	wb.SaveToFile(C.GoString(filepath))
+}
+
+//export ss_save_pdf
+func ss_save_pdf(ws C.Handle, sheet, dest *C.char) C.ss_status {
+	wb := workbooks[ws]
+	defer wb.Close()
+	defer delete(workbooks, ws)
+	sheet_name := C.GoString(sheet)
+	sh, err := wb.GetSheet(sheet_name)
+	if err != nil {
+		return C.ss_worksheet_error
+	}
+	pdf := convert.ConvertToPdf(&sh)
+	err = pdf.WriteToFile(C.GoString(dest))
+	if err != nil {
+		return C.ss_save_failed
+	}
+	return C.ss_ok
 }
 
 //export ss_check_sheet
@@ -133,7 +153,10 @@ func test_write_multi(h C.Handle, sheet *C.char, count C.int32_t, value *C.char)
 	c := int(count)
 	ss := workbooks[h]
 	sheet_name := C.GoString(sheet)
-	sh, _ := ss.GetSheet(sheet_name)
+	sh, err := ss.GetSheet(sheet_name)
+	if err != nil {
+		panic(err)
+	}
 	for i := 0; i < c; i++ {
 		sh.Cell("A" + strconv.Itoa(i+1)).SetString(C.GoString(value))
 	}

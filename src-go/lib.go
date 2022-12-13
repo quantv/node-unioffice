@@ -89,11 +89,15 @@ func ss_close(h C.Handle) {
 }
 
 //export ss_save
-func ss_save(ws C.Handle, filepath *C.char) {
+func ss_save(ws C.Handle, filepath *C.char) C.ss_status {
 	wb := workbooks[ws]
 	defer wb.Close()
 	defer delete(workbooks, ws)
-	wb.SaveToFile(C.GoString(filepath))
+	err := wb.SaveToFile(C.GoString(filepath))
+	if err != nil {
+		return C.ss_save_failed
+	}
+	return C.ss_ok
 }
 
 //export ss_save_pdf

@@ -102,10 +102,12 @@ static napi_value Save(napi_env env, napi_callback_info info){
     Handle wb = get_handle(env, args[0]);
     char *filepath = get_string(env, args[1]);
 
-    ss_save(wb, filepath);
-    
+    ss_status rs = ss_save(wb, filepath);
     delete filepath;
-
+    if (rs != ss_ok){
+        napi_throw_error(env, ss_status_code(rs), "Save failed");
+        return NULL;
+    }
     return NULL;
 }
 static napi_value SavePdf(napi_env env, napi_callback_info info){

@@ -34,11 +34,25 @@ static napi_value New(napi_env env, napi_callback_info info){
     return r;
 }
 static napi_value Open(napi_env env, napi_callback_info info){
+    napi_status status;
+    napi_value r;
 
+    size_t argc = 1;
+    napi_value args[argc];
+    status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
+    assert(status == napi_ok);
+    if (argc < 1) {
+        napi_throw_type_error(env, NULL, "Wrong number of arguments");
+        return NULL;
+    }
+    
+    char *file = get_string(env, args[0]);
+    status = napi_create_bigint_uint64(env, uint64_t(ss_open(file)), &r);
+    assert(status == napi_ok);
+    return r;
 }
 static napi_value Close(napi_env env, napi_callback_info info){
     napi_status status;
-    napi_value r;
     
     size_t argc = 1;
     napi_value args[argc];
@@ -56,7 +70,6 @@ static napi_value Close(napi_env env, napi_callback_info info){
 }
 static napi_value Save(napi_env env, napi_callback_info info){
     napi_status status;
-    napi_value r;
     
     size_t argc = 2;
     napi_value args[argc];
@@ -72,6 +85,9 @@ static napi_value Save(napi_env env, napi_callback_info info){
     char *filepath = get_string(env, args[1]);
 
     ss_save(wb, filepath);
+    
+    delete filepath;
+
     return NULL;
 }
 static napi_value AddSheet(napi_env env, napi_callback_info info){
@@ -93,6 +109,9 @@ static napi_value AddSheet(napi_env env, napi_callback_info info){
     char *s = ss_add_sheet(wb);
 
     status = napi_create_string_utf8(env, s, NAPI_AUTO_LENGTH, &r);
+    
+    delete s;
+    
     return r;
 }
 static napi_value AddRow(napi_env env, napi_callback_info info){
@@ -115,11 +134,13 @@ static napi_value AddRow(napi_env env, napi_callback_info info){
     uint32_t row = ss_add_row(wb, sheet_name);
 
     napi_create_uint32(env, row, &r);
+
+    delete sheet_name;
+
     return r;
 }
 static napi_value AddRows(napi_env env, napi_callback_info info){
     napi_status status;
-    napi_value r;
     
     size_t argc = 3;
     napi_value args[argc];
@@ -137,6 +158,8 @@ static napi_value AddRows(napi_env env, napi_callback_info info){
     status = napi_get_value_int32(env, args[2], &count);
     assert(status == napi_ok);
     ss_add_rows(wb, sheet_name, count);
+
+    delete sheet_name;
 
     return args[2];
 }
@@ -167,6 +190,10 @@ static napi_value AddCell(napi_env env, napi_callback_info info){
     char *cell = ss_add_cell(Handle(value0), sheet_name, row);
 
     napi_create_string_utf8(env, cell, NAPI_AUTO_LENGTH, &r);
+
+    delete sheet_name;
+    delete cell;
+
     return r;
 }
 static napi_value SetCellString(napi_env env, napi_callback_info info){
@@ -191,12 +218,16 @@ static napi_value SetCellString(napi_env env, napi_callback_info info){
     int32_t row = ss_set_cell_string(wb, sheet_name, cell_name, val);
 
     napi_create_int32(env, row, &r);
+    
+    delete sheet_name;
+    delete cell_name;
+    delete val;
+
     return r;
 }
 
 static napi_value TestWrite(napi_env env, napi_callback_info info){
     napi_status status;
-    napi_value r;
     
     size_t argc = 4;
     napi_value args[argc];
@@ -219,11 +250,6 @@ static napi_value TestWrite(napi_env env, napi_callback_info info){
 
     return NULL;
 }
-
-static napi_value copyRows(napi_env env, napi_callback_info info){
-
-}
-
 
 #define DECLARE_NAPI_METHOD(name, func) {name, 0, func, 0, 0, 0, napi_default, 0}
 

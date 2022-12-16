@@ -71,6 +71,26 @@ func ss_add_rows(h C.Handle, sheet *C.char, count C.int32_t) C.int32_t {
 	return count
 }
 
+//export ss_insert_rows
+func ss_insert_rows(h C.Handle, sheetName *C.char, rowNum, rows C.int32_t) C.ss_status {
+	sheet, err := get_sheet(h, sheetName)
+	if err != nil {
+		return C.ss_worksheet_error
+	}
+	sheet.InsertRows(int(rowNum), uint32(rows))
+	return C.ss_ok
+}
+
+//export ss_copy_rows
+func ss_copy_rows(h C.Handle, sheetName *C.char, source, dest, rows C.int32_t) C.ss_status {
+	sheet, err := get_sheet(h, sheetName)
+	if err != nil {
+		return C.ss_worksheet_error
+	}
+	sheet.CopyRows(uint32(source), uint32(dest), int(rows))
+	return C.ss_ok
+}
+
 //export ss_add_cell
 func ss_add_cell(h C.Handle, sheet *C.char, row C.uint32_t) *C.char {
 	ss := workbooks[h]

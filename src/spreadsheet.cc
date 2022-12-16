@@ -384,6 +384,38 @@ static napi_value SetCellString(napi_env env, napi_callback_info info){
     return NULL;
 }
 
+static napi_value SetCellBool(napi_env env, napi_callback_info info){
+    napi_status status;
+    
+    size_t argc = 4;
+    napi_value args[argc];
+    status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
+    assert(status == napi_ok);
+
+    if (argc < 4) {
+        napi_throw_type_error(env, NULL, "Wrong number of arguments");
+        return NULL;
+    }
+    
+    Handle wb = get_handle(env, args[0]);
+    char *sheet_name = get_string(env, args[1]);
+    char *cell_name = get_string(env, args[2]);
+    bool *val;
+    
+    status = napi_get_value_bool(env, args[3], val);
+    assert(status == napi_ok);
+
+    int32_t rs = ss_set_cell_bool(wb, sheet_name, cell_name, val ? 1 : 0);
+
+    delete sheet_name;
+    delete cell_name;
+    delete val;
+
+    assert(rs == 0);
+
+    return NULL;
+}
+
 static napi_value TestWrite(napi_env env, napi_callback_info info){
     napi_status status;
     
@@ -427,6 +459,7 @@ static napi_value Init(napi_env env, napi_value exports){
         DECLARE_NAPI_METHOD("add_rows", AddRows),
         DECLARE_NAPI_METHOD("add_cell", AddCell),
         DECLARE_NAPI_METHOD("set_cell_string", SetCellString),
+        DECLARE_NAPI_METHOD("set_cell_bool", SetCellBool),
         DECLARE_NAPI_METHOD("check_sheet", CheckSheet),
         DECLARE_NAPI_METHOD("insert_rows", InsertRows),
         DECLARE_NAPI_METHOD("copy_rows", CopyRows),

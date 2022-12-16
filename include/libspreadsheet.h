@@ -91,12 +91,15 @@ extern Handle ss_open(char* filepath);
 extern char* ss_add_sheet(Handle h);
 extern ss_status ss_add_row(Handle h, char* sheet, uint32_t* row);
 extern int32_t ss_add_rows(Handle h, char* sheet, int32_t count);
+extern ss_status ss_insert_rows(Handle h, char* sheetName, int32_t rowNum, int32_t rows);
+extern ss_status ss_copy_rows(Handle h, char* sheetName, int32_t source, int32_t dest, int32_t rows);
 extern char* ss_add_cell(Handle h, char* sheet, uint32_t row);
 extern void ss_close(Handle h);
-extern void ss_save(Handle ws, char* filepath);
+extern ss_status ss_save(Handle ws, char* filepath);
 extern ss_status ss_save_pdf(Handle ws, char* sheet, char* dest);
 extern ss_status ss_check_sheet(Handle h, char* sheet);
 extern int32_t ss_set_cell_string(Handle h, char* sheet, char* cell, char* value);
+extern int32_t ss_set_cell_bool(Handle h, char* sheet, char* cell, uint8_t value);
 extern int32_t test_write_multi(Handle h, char* sheet, int32_t count, char* value);
 
 #ifdef __cplusplus

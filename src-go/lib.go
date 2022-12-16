@@ -172,6 +172,28 @@ func ss_set_cell_string(h C.Handle, sheet *C.char, cell, value *C.char) C.int32_
 	return 0
 }
 
+//export ss_set_cell_bool
+func ss_set_cell_bool(h C.Handle, sheet *C.char, cell *C.char, value C.uint8_t) C.int32_t {
+	c, err := get_cell(h, sheet, cell)
+	if err != nil {
+		return 1
+	}
+	c.SetBool(value == 1)
+	return 0
+}
+
+// func (c Cell) SetBool(v bool)
+// func (c Cell) SetDate(d time.Time)
+// func (c Cell) SetDateWithStyle(d time.Time)
+// func (c Cell) SetFormulaArray(s string)
+// func (c Cell) SetFormulaRaw(s string)
+// func (c Cell) SetFormulaShared(formulaStr string, rows, cols uint32) error
+// func (c Cell) SetHyperlink(hl common.Hyperlink)
+// func (c Cell) SetNumber(v float64)
+// func (c Cell) SetRichTextString() RichText
+
+func ss_get_cell_string() {}
+
 //export test_write_multi
 func test_write_multi(h C.Handle, sheet *C.char, count C.int32_t, value *C.char) C.int32_t {
 	c := int(count)

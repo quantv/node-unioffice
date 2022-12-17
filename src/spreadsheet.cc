@@ -2,6 +2,7 @@
 #include <assert.h>
 #include <cstdlib>
 #include <cstdio>
+#include <errno.h>
 #include "../include/libspreadsheet.h"
 
 Handle get_handle(napi_env env, napi_value val){
@@ -599,16 +600,23 @@ static napi_value SetCellFormulaShared(napi_env env, napi_callback_info info){
     return NULL;
 }
 
+enum cell_value_type {
+    cell_value_type_string=1, 
+    cell_value_type_number=2,
+    cell_value_type_date=3,
+    cell_value_type_bool=4,
+};
+
 static napi_value CellGetValue(napi_env env, napi_callback_info info){
     napi_status status;
     napi_value value;
 
-    size_t argc = 3;
+    size_t argc = 4;
     napi_value args[argc];
     status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
     assert(status == napi_ok);
 
-    if (argc < 3) {
+    if (argc < 4) {
         napi_throw_type_error(env, NULL, "Wrong number of arguments");
         return NULL;
     }
@@ -617,26 +625,44 @@ static napi_value CellGetValue(napi_env env, napi_callback_info info){
     char *sheet_name = get_string(env, args[1]);
     char *cell_name = get_string(env, args[2]);
     
-    cellValue val = ss_cell_get_value(wb, sheet_name, cell_name);
-
+    int32_t t;
+    status = napi_get_value_int32(env, args[3], &t);
+    assert(status == napi_ok);
+    double dv;
+    char *sv;
+    int32_t bv;
+    ss_status rs;
+    errno = 0;
+    switch (t)
+    {
+        case cell_value_type_number:
+            dv = ss_cell_get_as_number(wb, sheet_name, cell_name);
+            status = napi_create_double(env, dv, &value);
+            break;
+        case cell_value_type_date:
+            dv = ss_cell_get_date(wb, sheet_name, cell_name);
+            status = napi_create_date(env, dv, &value);
+            break;
+        case cell_value_type_bool:
+            bv = ss_cell_get_bool(wb, sheet_name, cell_name);
+            status = napi_create_int32(env, bv, &value);
+        break;
+        case cell_value_type_string:
+        default:
+            sv = ss_cell_get_as_string(wb, sheet_name, cell_name);
+            status = napi_create_string_utf8(env, sv, NAPI_AUTO_LENGTH, &value);
+            delete sv;
+            break;
+    }
+    
     delete sheet_name;
     delete cell_name;
 
-    napi_create_object(env, &value);
-
-    napi_value v, t;
-    status = napi_create_string_utf8(env, val.v, NAPI_AUTO_LENGTH, &v);
+    if (errno != 0){
+        napi_throw_error(env, NULL, "Error getting cell value");
+        return NULL;
+    }
     assert(status == napi_ok);
-
-    status = napi_create_int32(env, val.t, &t);
-    assert(status == napi_ok);
-    
-    status = napi_set_named_property(env, value, "value", v);
-    assert(status == napi_ok);
-    
-    status = napi_set_named_property(env, value, "type", t);
-    assert(status == napi_ok);
-
     return value;
 }
 

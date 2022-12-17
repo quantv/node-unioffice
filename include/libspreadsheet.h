@@ -19,22 +19,23 @@ typedef struct { const char *p; ptrdiff_t n; } _GoString_;
 /* Start of preamble from import "C" comments.  */
 
 
-#line 4 "lib.go"
+#line 3 "lib.go"
 
 #include <stdint.h>
+#include <errno.h>
 typedef uint64_t Handle;
 
 typedef enum {
   ss_ok,
   ss_worksheet_error,
-  ss_save_failed
+  ss_save_failed,
+  ss_not_a_number,
 } ss_status;
 
 typedef struct {
 	char* v;
 	uint8_t t;
 } cellValue;
-
 
 #line 1 "cgo-generated-wrapper"
 
@@ -113,6 +114,10 @@ extern int32_t ss_set_cell_formula_raw(Handle h, char* sheet, char* cell, char* 
 extern int32_t ss_set_cell_formula_shared(Handle h, char* sheet, char* cell, char* value, uint32_t rows, uint32_t cols);
 extern int32_t ss_set_cell_number(Handle h, char* sheet, char* cell, double value);
 extern cellValue ss_cell_get_value(Handle h, char* sheet, char* cell);
+extern char* ss_cell_get_as_string(Handle h, char* sheet, char* cell);
+extern double ss_cell_get_as_number(Handle h, char* sheet, char* cell);
+extern uint8_t ss_cell_get_bool(Handle h, char* sheet, char* cell);
+extern int64_t ss_cell_get_date(Handle h, char* sheet, char* cell);
 extern void ss_recalculate_formulas(Handle h, char* sheet);
 extern int32_t test_write_multi(Handle h, char* sheet, int32_t count, char* value);
 

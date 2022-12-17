@@ -1,26 +1,26 @@
-// Copyright 2017 FoxyUtils ehf. All rights reserved.
 package main
 
 /*
 #include <stdint.h>
+#include <errno.h>
 typedef uint64_t Handle;
 
 typedef enum {
   ss_ok,
   ss_worksheet_error,
-  ss_save_failed
+  ss_save_failed,
+  ss_not_a_number,
 } ss_status;
 
 typedef struct {
 	char* v;
 	uint8_t t;
 } cellValue;
-
 */
 import "C"
 
 import (
-	"strconv"
+	"fmt"
 	"time"
 	"unsafe"
 
@@ -165,6 +165,8 @@ func get_cell(h C.Handle, sheet *C.char, cell *C.char) (spreadsheet.Cell, error)
 	var c spreadsheet.Cell
 	if err == nil {
 		c = sh.Cell(C.GoString(cell))
+	} else {
+		setError(135)
 	}
 	return c, err
 }
@@ -266,10 +268,7 @@ func ss_cell_get_value(h C.Handle, sheet *C.char, cell *C.char) C.cellValue {
 		return C.cellValue{}
 	}
 
-	raw, err := c.GetRawValue()
-	if err != nil {
-		return C.cellValue{}
-	}
+	raw := c.GetFormattedValue()
 	t := c.X().TAttr
 	return C.cellValue{
 		v: C.CString(raw),
@@ -277,30 +276,60 @@ func ss_cell_get_value(h C.Handle, sheet *C.char, cell *C.char) C.cellValue {
 	}
 }
 
-//export ss_recalculate_formulas
-func ss_recalculate_formulas(h C.Handle, sheet *C.char) {
-	sh, _ := get_sheet(h, sheet)
-	sh.RecalculateFormulas()
+//export ss_cell_get_as_string
+func ss_cell_get_as_string(h C.Handle, sheet *C.char, cell *C.char) *C.char {
+	c, err := get_cell(h, sheet, cell)
+	if err != nil {
+		return C.CString("")
+	}
+	return C.CString(c.GetFormattedValue())
 }
 
-func ss_get_cell_string() {}
-
-//export test_write_multi
-func test_write_multi(h C.Handle, sheet *C.char, count C.int32_t, value *C.char) C.int32_t {
-	c := int(count)
-	ss := workbooks[h]
-	sheet_name := C.GoString(sheet)
-	sh, err := ss.GetSheet(sheet_name)
+//export ss_cell_get_as_number
+func ss_cell_get_as_number(h C.Handle, sheet *C.char, cell *C.char) C.double {
+	c, _ := get_cell(h, sheet, cell)
+	n, err := c.GetValueAsNumber()
 	if err != nil {
-		panic(err)
+		setError(134)
+		return 0
 	}
-	for i := 0; i < c; i++ {
-		sh.Cell("A" + strconv.Itoa(i+1)).SetString(C.GoString(value))
+	return C.double(n)
+}
+
+//export ss_cell_get_bool
+func ss_cell_get_bool(h C.Handle, sheet *C.char, cell *C.char) C.uint8_t {
+	c, _ := get_cell(h, sheet, cell)
+	v, err := c.GetValueAsBool()
+	if err != nil {
+		setError(134)
+		return 0
 	}
-	return C.int32_t(0)
+	if v {
+		return 1
+	}
+	return 0
+}
+
+//export ss_cell_get_date
+func ss_cell_get_date(h C.Handle, sheet *C.char, cell *C.char) C.int64_t {
+	c, _ := get_cell(h, sheet, cell)
+	v, err := c.GetValueAsTime2()
+
+	if err != nil {
+		s := c.GetString()
+		fmt.Println("err", err, s)
+		setError(134)
+		return 0
+	}
+	return C.int64_t(v.UnixMilli())
+}
+
+//export ss_recalculate_formulas
+func ss_recalculate_formulas(h C.Handle, sheet *C.char) {
+	sh, err := get_sheet(h, sheet)
+	if err != nil {
+		sh.RecalculateFormulas()
+	}
 }
 
 var workbooks = make(map[C.Handle]*spreadsheet.Workbook)
-
-func main() {
-}

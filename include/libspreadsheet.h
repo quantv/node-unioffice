@@ -37,6 +37,11 @@ typedef struct {
 	uint8_t t;
 } cellValue;
 
+typedef struct {
+	void* data;
+	uint32_t len;
+} StringSlice;
+
 #line 1 "cgo-generated-wrapper"
 
 
@@ -115,11 +120,11 @@ extern int32_t ss_set_cell_formula_shared(Handle h, char* sheet, char* cell, cha
 extern int32_t ss_set_cell_number(Handle h, char* sheet, char* cell, double value);
 extern cellValue ss_cell_get_value(Handle h, char* sheet, char* cell);
 extern char* ss_cell_get_as_string(Handle h, char* sheet, char* cell);
+extern GoSlice ss_sheet_get_rows_as_strings(Handle h, char* sheet, uint32_t row);
 extern double ss_cell_get_as_number(Handle h, char* sheet, char* cell);
 extern uint8_t ss_cell_get_bool(Handle h, char* sheet, char* cell);
 extern int64_t ss_cell_get_date(Handle h, char* sheet, char* cell);
 extern void ss_recalculate_formulas(Handle h, char* sheet);
-extern int32_t test_write_multi(Handle h, char* sheet, int32_t count, char* value);
 
 #ifdef __cplusplus
 }

@@ -16,6 +16,11 @@ typedef struct {
 	char* v;
 	uint8_t t;
 } cellValue;
+
+typedef struct {
+	void* data;
+	uint32_t len;
+} StringSlice;
 */
 import "C"
 
@@ -282,7 +287,12 @@ func ss_cell_get_as_string(h C.Handle, sheet *C.char, cell *C.char) *C.char {
 	if err != nil {
 		return C.CString("")
 	}
-	return C.CString(c.GetFormattedValue())
+	return C.CString(c.GetString())
+}
+
+//export ss_sheet_get_rows_as_strings
+func ss_sheet_get_rows_as_strings(h C.Handle, sheet *C.char, row C.uint32_t) {
+
 }
 
 //export ss_cell_get_as_number

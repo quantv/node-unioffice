@@ -416,34 +416,6 @@ static napi_value SetCellBool(napi_env env, napi_callback_info info){
     return NULL;
 }
 
-static napi_value TestWrite(napi_env env, napi_callback_info info){
-    napi_status status;
-    
-    size_t argc = 4;
-    napi_value args[argc];
-    status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
-    assert(status == napi_ok);
-
-    if (argc < 4) {
-        napi_throw_type_error(env, NULL, "Wrong number of arguments");
-        return NULL;
-    }
-    
-    Handle wb = get_handle(env, args[0]);
-    char *sheet_name = get_string(env, args[1]);
-    char *val = get_string(env, args[2]);
-    int32_t count;
-    status = napi_get_value_int32(env, args[3], &count);
-    assert(status == napi_ok);
-
-    test_write_multi(wb, sheet_name, count, val);
-
-    delete sheet_name;
-    delete val;
-
-    return NULL;
-}
-
 #define DECLARE_NAPI_METHOD(name, func) {name, 0, func, 0, 0, 0, napi_default, 0}
 
 static napi_value SetCellDate(napi_env env, napi_callback_info info){
@@ -628,10 +600,10 @@ static napi_value CellGetValue(napi_env env, napi_callback_info info){
     int32_t t;
     status = napi_get_value_int32(env, args[3], &t);
     assert(status == napi_ok);
+
     double dv;
-    char *sv;
     int32_t bv;
-    ss_status rs;
+
     errno = 0;
     switch (t)
     {
@@ -649,7 +621,7 @@ static napi_value CellGetValue(napi_env env, napi_callback_info info){
         break;
         case cell_value_type_string:
         default:
-            sv = ss_cell_get_as_string(wb, sheet_name, cell_name);
+            char *sv = ss_cell_get_as_string(wb, sheet_name, cell_name);
             status = napi_create_string_utf8(env, sv, NAPI_AUTO_LENGTH, &value);
             delete sv;
             break;
@@ -693,6 +665,7 @@ static napi_value Init(napi_env env, napi_value exports){
     napi_status status;
     napi_property_descriptor desc[] = {
         DECLARE_NAPI_METHOD("cell_get_value", CellGetValue),
+        //DECLARE_NAPI_METHOD("sheet_get_row_values", GetRowValues),
         //set cell values
         DECLARE_NAPI_METHOD("set_cell_date", SetCellDate),
         DECLARE_NAPI_METHOD("set_cell_formula_array", SetCellFormulaArray),
@@ -715,7 +688,6 @@ static napi_value Init(napi_env env, napi_value exports){
         DECLARE_NAPI_METHOD("check_sheet", CheckSheet),
         DECLARE_NAPI_METHOD("insert_rows", InsertRows),
         DECLARE_NAPI_METHOD("copy_rows", CopyRows),
-        DECLARE_NAPI_METHOD("test", TestWrite),
     };
     status = napi_define_properties(env, exports, sizeof(desc) / sizeof(*desc), desc);
     assert(status == napi_ok);

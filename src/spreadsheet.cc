@@ -400,16 +400,15 @@ static napi_value SetCellBool(napi_env env, napi_callback_info info){
     Handle wb = get_handle(env, args[0]);
     char *sheet_name = get_string(env, args[1]);
     char *cell_name = get_string(env, args[2]);
-    bool *val;
+    bool val;
     
-    status = napi_get_value_bool(env, args[3], val);
+    status = napi_get_value_bool(env, args[3], &val);
     assert(status == napi_ok);
 
     int32_t rs = ss_set_cell_bool(wb, sheet_name, cell_name, val ? 1 : 0);
 
     delete sheet_name;
     delete cell_name;
-    delete val;
 
     assert(rs == 0);
 
@@ -446,20 +445,247 @@ static napi_value TestWrite(napi_env env, napi_callback_info info){
 
 #define DECLARE_NAPI_METHOD(name, func) {name, 0, func, 0, 0, 0, napi_default, 0}
 
+static napi_value SetCellDate(napi_env env, napi_callback_info info){
+    napi_status status;
+    
+    size_t argc = 4;
+    napi_value args[argc];
+    status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
+    assert(status == napi_ok);
+
+    if (argc < 4) {
+        napi_throw_type_error(env, NULL, "Wrong number of arguments");
+        return NULL;
+    }
+    
+    Handle wb = get_handle(env, args[0]);
+    char *sheet_name = get_string(env, args[1]);
+    char *cell_name = get_string(env, args[2]);
+    double val;
+    
+    status = napi_get_date_value(env, args[3], &val);
+    assert(status == napi_ok);
+
+    int32_t rs = ss_set_cell_date(wb, sheet_name, cell_name, val);
+
+    delete sheet_name;
+    delete cell_name;
+
+    assert(rs == 0);
+
+    return NULL;
+}
+
+static napi_value SetCellNumber(napi_env env, napi_callback_info info){
+    napi_status status;
+    
+    size_t argc = 4;
+    napi_value args[argc];
+    status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
+    assert(status == napi_ok);
+
+    if (argc < 4) {
+        napi_throw_type_error(env, NULL, "Wrong number of arguments");
+        return NULL;
+    }
+    
+    Handle wb = get_handle(env, args[0]);
+    char *sheet_name = get_string(env, args[1]);
+    char *cell_name = get_string(env, args[2]);
+    double val;
+    
+    status = napi_get_value_double(env, args[3], &val);
+    assert(status == napi_ok);
+
+    int32_t rs = ss_set_cell_number(wb, sheet_name, cell_name, val);
+
+    delete sheet_name;
+    delete cell_name;
+
+    assert(rs == 0);
+
+    return NULL;
+}
+
+static napi_value SetCellFormulaRaw(napi_env env, napi_callback_info info){
+    napi_status status;
+    
+    size_t argc = 4;
+    napi_value args[argc];
+    status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
+    assert(status == napi_ok);
+
+    if (argc < 4) {
+        napi_throw_type_error(env, NULL, "Wrong number of arguments");
+        return NULL;
+    }
+    
+    Handle wb = get_handle(env, args[0]);
+    char *sheet_name = get_string(env, args[1]);
+    char *cell_name = get_string(env, args[2]);
+    char *val = get_string(env, args[3]);
+
+    int32_t rs = ss_set_cell_formula_raw(wb, sheet_name, cell_name, val);
+
+    delete sheet_name;
+    delete cell_name;
+    delete val;
+
+    assert(rs == 0);
+
+    return NULL;
+}
+
+static napi_value SetCellFormulaArray(napi_env env, napi_callback_info info){
+    napi_status status;
+    
+    size_t argc = 4;
+    napi_value args[argc];
+    status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
+    assert(status == napi_ok);
+
+    if (argc < 4) {
+        napi_throw_type_error(env, NULL, "Wrong number of arguments");
+        return NULL;
+    }
+    
+    Handle wb = get_handle(env, args[0]);
+    char *sheet_name = get_string(env, args[1]);
+    char *cell_name = get_string(env, args[2]);
+    char *val = get_string(env, args[3]);
+
+    int32_t rs = ss_set_cell_formula_array(wb, sheet_name, cell_name, val);
+
+    delete sheet_name;
+    delete cell_name;
+    delete val;
+
+    assert(rs == 0);
+
+    return NULL;
+}
+
+static napi_value SetCellFormulaShared(napi_env env, napi_callback_info info){
+    napi_status status;
+    
+    size_t argc = 6;
+    napi_value args[argc];
+    status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
+    assert(status == napi_ok);
+
+    if (argc < 6) {
+        napi_throw_type_error(env, NULL, "Wrong number of arguments");
+        return NULL;
+    }
+    
+    Handle wb = get_handle(env, args[0]);
+    char *sheet_name = get_string(env, args[1]);
+    char *cell_name = get_string(env, args[2]);
+    char *val = get_string(env, args[3]);
+    u_int32_t rows, cols;
+    status = napi_get_value_uint32(env, args[4], &rows);
+    assert(status == napi_ok);
+    status = napi_get_value_uint32(env, args[5], &cols);
+    assert(status == napi_ok);
+
+    int32_t rs = ss_set_cell_formula_shared(wb, sheet_name, cell_name, val, rows, cols);
+
+    delete sheet_name;
+    delete cell_name;
+    delete val;
+
+    assert(rs == 0);
+
+    return NULL;
+}
+
+static napi_value CellGetValue(napi_env env, napi_callback_info info){
+    napi_status status;
+    napi_value value;
+
+    size_t argc = 3;
+    napi_value args[argc];
+    status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
+    assert(status == napi_ok);
+
+    if (argc < 3) {
+        napi_throw_type_error(env, NULL, "Wrong number of arguments");
+        return NULL;
+    }
+    
+    Handle wb = get_handle(env, args[0]);
+    char *sheet_name = get_string(env, args[1]);
+    char *cell_name = get_string(env, args[2]);
+    
+    cellValue val = ss_cell_get_value(wb, sheet_name, cell_name);
+
+    delete sheet_name;
+    delete cell_name;
+
+    napi_create_object(env, &value);
+
+    napi_value v, t;
+    status = napi_create_string_utf8(env, val.v, NAPI_AUTO_LENGTH, &v);
+    assert(status == napi_ok);
+
+    status = napi_create_int32(env, val.t, &t);
+    assert(status == napi_ok);
+    
+    status = napi_set_named_property(env, value, "value", v);
+    assert(status == napi_ok);
+    
+    status = napi_set_named_property(env, value, "type", t);
+    assert(status == napi_ok);
+
+    return value;
+}
+
+static napi_value RecalculateFormulas(napi_env env, napi_callback_info info){
+    napi_status status;
+    napi_value value;
+
+    size_t argc = 2;
+    napi_value args[argc];
+    status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
+    assert(status == napi_ok);
+
+    if (argc < 2) {
+        napi_throw_type_error(env, NULL, "Wrong number of arguments");
+        return NULL;
+    }
+    
+    Handle wb = get_handle(env, args[0]);
+    char *sheet_name = get_string(env, args[1]);
+    
+    ss_recalculate_formulas(wb, sheet_name);
+
+    delete sheet_name;
+    return NULL;
+}
+
 static napi_value Init(napi_env env, napi_value exports){
     napi_status status;
     napi_property_descriptor desc[] = {
+        DECLARE_NAPI_METHOD("cell_get_value", CellGetValue),
+        //set cell values
+        DECLARE_NAPI_METHOD("set_cell_date", SetCellDate),
+        DECLARE_NAPI_METHOD("set_cell_formula_array", SetCellFormulaArray),
+        DECLARE_NAPI_METHOD("set_cell_formula_shared", SetCellFormulaShared),
+        DECLARE_NAPI_METHOD("set_cell_formula_raw", SetCellFormulaRaw),
+        DECLARE_NAPI_METHOD("set_cell_number", SetCellNumber),
+        DECLARE_NAPI_METHOD("set_cell_string", SetCellString),
+        DECLARE_NAPI_METHOD("set_cell_bool", SetCellBool),
+        //workbooks
         DECLARE_NAPI_METHOD("new", New),
         DECLARE_NAPI_METHOD("open", Open),
         DECLARE_NAPI_METHOD("save", Save),
         DECLARE_NAPI_METHOD("save_pdf", SavePdf),
+        DECLARE_NAPI_METHOD("sheet_recalculate_formulas", RecalculateFormulas),
         DECLARE_NAPI_METHOD("close", Close),
         DECLARE_NAPI_METHOD("add_sheet", AddSheet),
         DECLARE_NAPI_METHOD("add_row", AddRow),
         DECLARE_NAPI_METHOD("add_rows", AddRows),
         DECLARE_NAPI_METHOD("add_cell", AddCell),
-        DECLARE_NAPI_METHOD("set_cell_string", SetCellString),
-        DECLARE_NAPI_METHOD("set_cell_bool", SetCellBool),
         DECLARE_NAPI_METHOD("check_sheet", CheckSheet),
         DECLARE_NAPI_METHOD("insert_rows", InsertRows),
         DECLARE_NAPI_METHOD("copy_rows", CopyRows),

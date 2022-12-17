@@ -30,6 +30,12 @@ typedef enum {
   ss_save_failed
 } ss_status;
 
+typedef struct {
+	char* v;
+	uint8_t t;
+} cellValue;
+
+
 #line 1 "cgo-generated-wrapper"
 
 
@@ -100,6 +106,14 @@ extern ss_status ss_save_pdf(Handle ws, char* sheet, char* dest);
 extern ss_status ss_check_sheet(Handle h, char* sheet);
 extern int32_t ss_set_cell_string(Handle h, char* sheet, char* cell, char* value);
 extern int32_t ss_set_cell_bool(Handle h, char* sheet, char* cell, uint8_t value);
+extern int32_t ss_set_cell_date(Handle h, char* sheet, char* cell, double value);
+extern int32_t ss_set_cell_date_with_style(Handle h, char* sheet, char* cell, double value);
+extern int32_t ss_set_cell_formula_array(Handle h, char* sheet, char* cell, char* value);
+extern int32_t ss_set_cell_formula_raw(Handle h, char* sheet, char* cell, char* value);
+extern int32_t ss_set_cell_formula_shared(Handle h, char* sheet, char* cell, char* value, uint32_t rows, uint32_t cols);
+extern int32_t ss_set_cell_number(Handle h, char* sheet, char* cell, double value);
+extern cellValue ss_cell_get_value(Handle h, char* sheet, char* cell);
+extern void ss_recalculate_formulas(Handle h, char* sheet);
 extern int32_t test_write_multi(Handle h, char* sheet, int32_t count, char* value);
 
 #ifdef __cplusplus

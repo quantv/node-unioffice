@@ -26,15 +26,32 @@ async function set_value(){
     let wb = office.spreadsheet.open("./test/test2.xlsx");
     let ws = wb.sheet('MOMO');
 
-    ws.cell('B4').setBool(true)
-    ws.cell('B5').setBool(false)
-    ws.cell('B6').setBool(1)
-    ws.cell('B7').setBool(0)
+    ws.cell("A1").setBool(true);
+    ws.cell("A2").setString("abc");
+    ws.cell("A3").setNumber(1234)
+    ws.cell("A4").setNumber(1234.1222)
+    ws.cell("A5").setFormula("A3+A4")
+    
+    ws.cell("A6").setFormulaShared("A3+1", 2, 3);
+    
+    ws.recalculateFormulas();
 
-    wb.save("/tmp/unioffice/test3.xlsx");
-    check_mem();
+    wb.save("/tmp/unioffice/set_value.xlsx");
 }
 
+async function get_value(){
+    let wb = office.spreadsheet.open("/tmp/unioffice/date.xlsx");
+    let ws = wb.sheet('MOMO');
+
+    let cols = "ABCDEFGH".split("")
+    for(let i=1; i<10; i++){
+        for(let col of cols){
+            let cellName = `${col}${i}`;
+            let v = ws.cell(cellName).getValue();
+            console.log(cellName, v);
+        }
+    }
+}
 
 function check_mem(){
     const used = process.memoryUsage().rss / 1024 / 1024;
@@ -42,6 +59,7 @@ function check_mem(){
 }
 
 set_value();
+//get_value();
 //process.exit(0)
 
 for(let i=0; i<10; i++){

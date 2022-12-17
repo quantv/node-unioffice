@@ -10,11 +10,18 @@ typedef enum {
   ss_worksheet_error,
   ss_save_failed
 } ss_status;
+
+typedef struct {
+	char* v;
+	uint8_t t;
+} cellValue;
+
 */
 import "C"
 
 import (
 	"strconv"
+	"time"
 	"unsafe"
 
 	"github.com/unidoc/unioffice/spreadsheet"
@@ -182,15 +189,99 @@ func ss_set_cell_bool(h C.Handle, sheet *C.char, cell *C.char, value C.uint8_t) 
 	return 0
 }
 
-// func (c Cell) SetBool(v bool)
-// func (c Cell) SetDate(d time.Time)
-// func (c Cell) SetDateWithStyle(d time.Time)
-// func (c Cell) SetFormulaArray(s string)
-// func (c Cell) SetFormulaRaw(s string)
-// func (c Cell) SetFormulaShared(formulaStr string, rows, cols uint32) error
+//export ss_set_cell_date
+func ss_set_cell_date(h C.Handle, sheet *C.char, cell *C.char, value C.double) C.int32_t {
+	c, err := get_cell(h, sheet, cell)
+	if err != nil {
+		return 1
+	}
+	d := time.UnixMilli(int64(value))
+	c.SetDate(d)
+	return 0
+}
+
+//export ss_set_cell_date_with_style
+func ss_set_cell_date_with_style(h C.Handle, sheet *C.char, cell *C.char, value C.double) C.int32_t {
+	c, err := get_cell(h, sheet, cell)
+	if err != nil {
+		return 1
+	}
+	d := time.UnixMilli(int64(value))
+	c.SetDateWithStyle(d)
+	return 0
+}
+
+//export ss_set_cell_formula_array
+func ss_set_cell_formula_array(h C.Handle, sheet *C.char, cell *C.char, value *C.char) C.int32_t {
+	c, err := get_cell(h, sheet, cell)
+	if err != nil {
+		return 1
+	}
+	c.SetFormulaArray(C.GoString(value))
+	return 0
+}
+
+//export ss_set_cell_formula_raw
+func ss_set_cell_formula_raw(h C.Handle, sheet *C.char, cell *C.char, value *C.char) C.int32_t {
+	c, err := get_cell(h, sheet, cell)
+	if err != nil {
+		return 1
+	}
+	c.SetFormulaRaw(C.GoString(value))
+	return 0
+}
+
+//export ss_set_cell_formula_shared
+func ss_set_cell_formula_shared(h C.Handle, sheet *C.char, cell *C.char, value *C.char, rows, cols C.uint32_t) C.int32_t {
+	c, err := get_cell(h, sheet, cell)
+	if err != nil {
+		return 1
+	}
+	c.SetFormulaShared(C.GoString(value), uint32(rows), uint32(cols))
+	return 0
+}
+
+//export ss_set_cell_number
+func ss_set_cell_number(h C.Handle, sheet *C.char, cell *C.char, value C.double) C.int32_t {
+	c, err := get_cell(h, sheet, cell)
+	if err != nil {
+		return 1
+	}
+	c.SetNumber(float64(value))
+	return 0
+}
+
 // func (c Cell) SetHyperlink(hl common.Hyperlink)
-// func (c Cell) SetNumber(v float64)
 // func (c Cell) SetRichTextString() RichText
+
+type CellValue struct {
+	V     string
+	TAttr byte
+}
+
+//export ss_cell_get_value
+func ss_cell_get_value(h C.Handle, sheet *C.char, cell *C.char) C.cellValue {
+	c, err := get_cell(h, sheet, cell)
+	if err != nil {
+		return C.cellValue{}
+	}
+
+	raw, err := c.GetRawValue()
+	if err != nil {
+		return C.cellValue{}
+	}
+	t := c.X().TAttr
+	return C.cellValue{
+		v: C.CString(raw),
+		t: C.uint8_t(t),
+	}
+}
+
+//export ss_recalculate_formulas
+func ss_recalculate_formulas(h C.Handle, sheet *C.char) {
+	sh, _ := get_sheet(h, sheet)
+	sh.RecalculateFormulas()
+}
 
 func ss_get_cell_string() {}
 

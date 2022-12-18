@@ -15,6 +15,7 @@ typedef enum {
 typedef struct {
 	char* v;
 	uint8_t t;
+	char* s;
 } cellValue;
 
 typedef struct {
@@ -273,11 +274,16 @@ func ss_cell_get_value(h C.Handle, sheet *C.char, cell *C.char) C.cellValue {
 		return C.cellValue{}
 	}
 
-	raw := c.GetFormattedValue()
+	raw, err := c.GetRawValue()
+	if err != nil {
+		setError(134)
+		return C.cellValue{}
+	}
 	t := c.X().TAttr
 	return C.cellValue{
 		v: C.CString(raw),
 		t: C.uint8_t(t),
+		s: C.CString(c.GetFormat()),
 	}
 }
 

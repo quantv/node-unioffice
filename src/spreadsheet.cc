@@ -620,11 +620,19 @@ static napi_value CellGetValue(napi_env env, napi_callback_info info){
             status = napi_create_int32(env, bv, &value);
         break;
         case cell_value_type_string:
-        default:
             char *sv = ss_cell_get_as_string(wb, sheet_name, cell_name);
             status = napi_create_string_utf8(env, sv, NAPI_AUTO_LENGTH, &value);
             delete sv;
             break;
+        default:
+            cellValue cv = ss_cell_get_value(wb, sheet_name, cell_name);
+            napi_value t, v;
+            status = napi_create_string_utf8(env, cv.v, NAPI_AUTO_LENGTH, &v);
+            status = napi_create_int32(env, cv.t, &t);
+            status = napi_create_object(env, &value);
+            status = napi_set_named_property(env, value, "value", v);
+            status = napi_set_named_property(env, value, "type", t);
+        break;
     }
     
     delete sheet_name;

@@ -17,11 +17,6 @@ typedef struct {
 	uint8_t t;
 	char* s;
 } cellValue;
-
-typedef struct {
-	void* data;
-	uint32_t len;
-} StringSlice;
 */
 import "C"
 

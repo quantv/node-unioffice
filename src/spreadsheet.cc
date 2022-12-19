@@ -604,6 +604,10 @@ static napi_value CellGetValue(napi_env env, napi_callback_info info){
     double dv;
     int32_t bv;
 
+    cellValue cv;
+    napi_value celltype, v, cellformat;
+    char *sv;
+
     errno = 0;
     switch (t)
     {
@@ -620,18 +624,20 @@ static napi_value CellGetValue(napi_env env, napi_callback_info info){
             status = napi_create_int32(env, bv, &value);
         break;
         case cell_value_type_string:
-            char *sv = ss_cell_get_as_string(wb, sheet_name, cell_name);
+            sv = ss_cell_get_as_string(wb, sheet_name, cell_name);
             status = napi_create_string_utf8(env, sv, NAPI_AUTO_LENGTH, &value);
             delete sv;
             break;
         default:
-            cellValue cv = ss_cell_get_value(wb, sheet_name, cell_name);
-            napi_value t, v;
+            cv = ss_cell_get_value(wb, sheet_name, cell_name);
             status = napi_create_string_utf8(env, cv.v, NAPI_AUTO_LENGTH, &v);
-            status = napi_create_int32(env, cv.t, &t);
+            status = napi_create_int32(env, cv.t, &celltype);
             status = napi_create_object(env, &value);
+            status = napi_create_string_utf8(env, cv.s, NAPI_AUTO_LENGTH, &cellformat);
+
             status = napi_set_named_property(env, value, "value", v);
-            status = napi_set_named_property(env, value, "type", t);
+            status = napi_set_named_property(env, value, "type", celltype);
+            status = napi_set_named_property(env, value, "format", cellformat);
         break;
     }
     

@@ -35,12 +35,8 @@ typedef enum {
 typedef struct {
 	char* v;
 	uint8_t t;
+	char* s;
 } cellValue;
-
-typedef struct {
-	void* data;
-	uint32_t len;
-} StringSlice;
 
 #line 1 "cgo-generated-wrapper"
 
@@ -120,7 +116,7 @@ extern int32_t ss_set_cell_formula_shared(Handle h, char* sheet, char* cell, cha
 extern int32_t ss_set_cell_number(Handle h, char* sheet, char* cell, double value);
 extern cellValue ss_cell_get_value(Handle h, char* sheet, char* cell);
 extern char* ss_cell_get_as_string(Handle h, char* sheet, char* cell);
-extern GoSlice ss_sheet_get_rows_as_strings(Handle h, char* sheet, uint32_t row);
+extern void ss_sheet_get_rows_as_strings(Handle h, char* sheet, uint32_t row);
 extern double ss_cell_get_as_number(Handle h, char* sheet, char* cell);
 extern uint8_t ss_cell_get_bool(Handle h, char* sheet, char* cell);
 extern int64_t ss_cell_get_date(Handle h, char* sheet, char* cell);

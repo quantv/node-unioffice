@@ -8,6 +8,14 @@ This package contains a very limited set of APIs that can be use for simple read
 
 Set environment variable to supply LICENSE file to unioffice: UNIOFFICE_LICENSE_PATH
 
+NPM cli publish complains about Hard link: 415 Unsupported Media Type - PUT https://registry.npmjs.org/unioffice - Hard link is not allowed
+
+I cannot find the hard link or fix that. So, if you want to use the library:
+
+```sh
+npm install github:quantv/node-unioffice
+```
+
 ```javascript
 const office = require('unioffice');
 let wb = office.spreadsheet.open("./filename.xlsx");

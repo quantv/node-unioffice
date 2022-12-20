@@ -338,9 +338,27 @@ func ss_cell_get_date(h C.Handle, sheet *C.char, cell *C.char) C.int64_t {
 //export ss_recalculate_formulas
 func ss_recalculate_formulas(h C.Handle, sheet *C.char) {
 	sh, err := get_sheet(h, sheet)
-	if err != nil {
+	if err == nil {
 		sh.RecalculateFormulas()
 	}
+}
+
+//export ss_last_column_index
+func ss_last_column_index(h C.Handle, sheet *C.char) C.int32_t {
+	sh, err := get_sheet(h, sheet)
+	if err != nil {
+		return 0
+	}
+	return C.int32_t(sh.MaxColumnIdx())
+}
+
+//export ss_last_row_index
+func ss_last_row_index(h C.Handle, sheet *C.char) C.int32_t {
+	sh, err := get_sheet(h, sheet)
+	if err != nil {
+		return 0
+	}
+	return C.int32_t(len(sh.Rows()))
 }
 
 var workbooks = make(map[C.Handle]*spreadsheet.Workbook)

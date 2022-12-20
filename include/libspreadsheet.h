@@ -121,6 +121,8 @@ extern double ss_cell_get_as_number(Handle h, char* sheet, char* cell);
 extern uint8_t ss_cell_get_bool(Handle h, char* sheet, char* cell);
 extern int64_t ss_cell_get_date(Handle h, char* sheet, char* cell);
 extern void ss_recalculate_formulas(Handle h, char* sheet);
+extern int32_t ss_last_column_index(Handle h, char* sheet);
+extern int32_t ss_last_row_index(Handle h, char* sheet);
 
 #ifdef __cplusplus
 }

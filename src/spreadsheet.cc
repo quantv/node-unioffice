@@ -675,6 +675,56 @@ static napi_value RecalculateFormulas(napi_env env, napi_callback_info info){
     return NULL;
 }
 
+static napi_value MaxColumnIndex(napi_env env, napi_callback_info info){
+    napi_status status;
+    napi_value value;
+
+    size_t argc = 2;
+    napi_value args[argc];
+    status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
+    assert(status == napi_ok);
+
+    if (argc < 2) {
+        napi_throw_type_error(env, NULL, "Wrong number of arguments");
+        return NULL;
+    }
+    
+    Handle wb = get_handle(env, args[0]);
+    char *sheet_name = get_string(env, args[1]);
+    
+    int32_t idx = ss_last_column_index(wb, sheet_name);
+    status = napi_create_int32(env, idx, &value);
+    assert(status == napi_ok);
+
+    delete sheet_name;
+    return value;
+}
+
+static napi_value MaxRowIndex(napi_env env, napi_callback_info info){
+    napi_status status;
+    napi_value value;
+
+    size_t argc = 2;
+    napi_value args[argc];
+    status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
+    assert(status == napi_ok);
+
+    if (argc < 2) {
+        napi_throw_type_error(env, NULL, "Wrong number of arguments");
+        return NULL;
+    }
+    
+    Handle wb = get_handle(env, args[0]);
+    char *sheet_name = get_string(env, args[1]);
+    
+    int32_t idx = ss_last_row_index(wb, sheet_name);
+    status = napi_create_int32(env, idx, &value);
+    assert(status == napi_ok);
+
+    delete sheet_name;
+    return value;
+}
+
 static napi_value Init(napi_env env, napi_value exports){
     napi_status status;
     napi_property_descriptor desc[] = {
@@ -696,6 +746,9 @@ static napi_value Init(napi_env env, napi_value exports){
         DECLARE_NAPI_METHOD("sheet_recalculate_formulas", RecalculateFormulas),
         DECLARE_NAPI_METHOD("close", Close),
         DECLARE_NAPI_METHOD("add_sheet", AddSheet),
+        //Sheets
+        DECLARE_NAPI_METHOD("sheet_max_column", MaxColumnIndex),
+        DECLARE_NAPI_METHOD("sheet_max_row", MaxRowIndex),
         DECLARE_NAPI_METHOD("add_row", AddRow),
         DECLARE_NAPI_METHOD("add_rows", AddRows),
         DECLARE_NAPI_METHOD("add_cell", AddCell),

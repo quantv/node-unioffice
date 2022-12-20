@@ -654,7 +654,6 @@ static napi_value CellGetValue(napi_env env, napi_callback_info info){
 
 static napi_value RecalculateFormulas(napi_env env, napi_callback_info info){
     napi_status status;
-    napi_value value;
 
     size_t argc = 2;
     napi_value args[argc];

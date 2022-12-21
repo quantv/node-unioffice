@@ -123,6 +123,7 @@ extern int64_t ss_cell_get_date(Handle h, char* sheet, char* cell);
 extern void ss_recalculate_formulas(Handle h, char* sheet);
 extern int32_t ss_last_column_index(Handle h, char* sheet);
 extern int32_t ss_last_row_index(Handle h, char* sheet);
+extern char* ss_get_sheet_name(Handle h, int32_t sheet);
 
 #ifdef __cplusplus
 }

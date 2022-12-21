@@ -724,6 +724,34 @@ static napi_value MaxRowIndex(napi_env env, napi_callback_info info){
     return value;
 }
 
+static napi_value GetSheetName(napi_env env, napi_callback_info info){
+    napi_status status;
+    napi_value value;
+
+    size_t argc = 2;
+    napi_value args[argc];
+    status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
+    assert(status == napi_ok);
+
+    if (argc < 2) {
+        napi_throw_type_error(env, NULL, "Wrong number of arguments");
+        return NULL;
+    }
+    
+    Handle wb = get_handle(env, args[0]);
+    int32_t idx;
+    status = napi_get_value_int32(env, args[1], &idx);
+    char *sheet_name = ss_get_sheet_name(wb, idx);
+    if (sheet_name == NULL){
+        napi_throw_error(env, NULL, "Invalid sheet index");
+        return NULL;
+    }
+    status = napi_create_string_utf8(env, sheet_name, NAPI_AUTO_LENGTH, &value);
+    assert(status == napi_ok);
+    delete sheet_name;
+    return value;
+}
+
 static napi_value Init(napi_env env, napi_value exports){
     napi_status status;
     napi_property_descriptor desc[] = {
@@ -746,6 +774,7 @@ static napi_value Init(napi_env env, napi_value exports){
         DECLARE_NAPI_METHOD("close", Close),
         DECLARE_NAPI_METHOD("add_sheet", AddSheet),
         //Sheets
+        DECLARE_NAPI_METHOD("sheet_name", GetSheetName),
         DECLARE_NAPI_METHOD("sheet_max_column", MaxColumnIndex),
         DECLARE_NAPI_METHOD("sheet_max_row", MaxRowIndex),
         DECLARE_NAPI_METHOD("add_row", AddRow),

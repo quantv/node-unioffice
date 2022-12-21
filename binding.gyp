@@ -3,9 +3,16 @@
     {
       'target_name': 'unispreadsheet',
       'sources': [ 'src/spreadsheet.cc' ],
-      'cflags!': [ '-fno-exceptions' ],
-      'cflags_cc!': [ '-fno-exceptions' ],
-      'libraries': ['<!(pwd)/include/libspreadsheet.so'],
+      'link_settings': {
+        'library_dirs': ['../include'],
+        'libraries': [
+          '-l:libspreadsheet.so'
+        ],
+        'ldflags': [
+          # Ensure runtime linking is relative to sharp.node
+          '-Wl,-s -Wl,--disable-new-dtags -Wl,-rpath=\'$$ORIGIN/../../include\''
+        ]
+      }
     }
   ]
 }

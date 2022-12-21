@@ -361,4 +361,16 @@ func ss_last_row_index(h C.Handle, sheet *C.char) C.int32_t {
 	return C.int32_t(len(sh.Rows()))
 }
 
+//export ss_get_sheet_name
+func ss_get_sheet_name(h C.Handle, sheet C.int32_t) *C.char {
+	wb := workbooks[h]
+	sheets := wb.Sheets()
+	idx := int(sheet)
+	if idx < 0 || idx >= len(sheets) {
+		return nil
+	}
+	sh := sheets[idx]
+	return C.CString(sh.Name())
+}
+
 var workbooks = make(map[C.Handle]*spreadsheet.Workbook)

@@ -26,7 +26,7 @@ import (
 	"unsafe"
 
 	"github.com/unidoc/unioffice/spreadsheet"
-	"github.com/unidoc/unioffice/spreadsheet/convert"
+	"github.com/unidoc/unioffice/spreadsheet/convert2"
 )
 
 //export ss_new
@@ -138,7 +138,7 @@ func ss_save_pdf(ws C.Handle, sheet, dest *C.char) C.ss_status {
 	if err != nil {
 		return C.ss_worksheet_error
 	}
-	pdf := convert.ConvertToPdf(&sh)
+	pdf := convert2.ConvertToPdf(&sh)
 	err = pdf.WriteToFile(C.GoString(dest))
 	if err != nil {
 		return C.ss_save_failed

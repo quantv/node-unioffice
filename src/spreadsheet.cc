@@ -193,6 +193,34 @@ static napi_value AddRow(napi_env env, napi_callback_info info){
 
     return r;
 }
+
+static napi_value SetHeightAuto(napi_env env, napi_callback_info info){
+    napi_status status;
+    napi_value r;
+    
+    size_t argc = 3;
+    napi_value args[argc];
+    status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
+    assert(status == napi_ok);
+
+    if (argc < 3) {
+        napi_throw_type_error(env, NULL, "Wrong number of arguments");
+        return NULL;
+    }
+    
+    Handle wb = get_handle(env, args[0]);
+    char *sheet_name = get_string(env, args[1]);
+
+    int32_t row;
+    status = napi_get_value_int32(env, args[2], &row);
+    
+    delete sheet_name;
+
+    ss_auto_height(wb, sheet_name, row);
+
+    return r;
+}
+
 static napi_value AddRows(napi_env env, napi_callback_info info){
     napi_status status;
     
@@ -783,6 +811,7 @@ static napi_value Init(napi_env env, napi_value exports){
         DECLARE_NAPI_METHOD("check_sheet", CheckSheet),
         DECLARE_NAPI_METHOD("insert_rows", InsertRows),
         DECLARE_NAPI_METHOD("copy_rows", CopyRows),
+        DECLARE_NAPI_METHOD("set_row_height_auto", SetHeightAuto),
     };
     status = napi_define_properties(env, exports, sizeof(desc) / sizeof(*desc), desc);
     assert(status == napi_ok);

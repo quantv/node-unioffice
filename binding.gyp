@@ -6,7 +6,7 @@
       'link_settings': {
         'library_dirs': ['../include'],
         'libraries': [
-          '-l:libspreadsheet.so'
+          '-l:libspreadsheet-0.1.0.so'
         ],
         'ldflags': [
           # Ensure runtime linking is relative to sharp.node

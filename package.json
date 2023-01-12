@@ -4,11 +4,13 @@
   "description": "Edit excel files for nodejs base on unioffice",
   "main": "index.js",
   "scripts": {
+    "install": "node install/lib.js && node-gyp rebuild",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "bindings": "^1.5.0"
+    "bindings": "^1.5.0",
+    "tar-stream": "^3.0.0"
   }
 }

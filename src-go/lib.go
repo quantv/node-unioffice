@@ -99,6 +99,16 @@ func ss_copy_rows(h C.Handle, sheetName *C.char, source, dest, rows C.int32_t) C
 	return C.ss_ok
 }
 
+//export ss_auto_height
+func ss_auto_height(h C.Handle, sheetName *C.char, row C.int32_t) C.ss_status {
+	sheet, err := get_sheet(h, sheetName)
+	if err != nil {
+		return C.ss_worksheet_error
+	}
+	sheet.Row(uint32(row)).SetHeightAuto()
+	return C.ss_ok
+}
+
 //export ss_add_cell
 func ss_add_cell(h C.Handle, sheet *C.char, row C.uint32_t) *C.char {
 	ss := workbooks[h]

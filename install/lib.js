@@ -3,11 +3,14 @@ const tar = require('tar-stream');
 
 const https = require('https'); // or 'https' for https:// URLs
 const {
-  createWriteStream, existsSync,
+  createWriteStream, existsSync, mkdirSync
 } = require('node:fs');
 
 const path = require('node:path');
 const target = path.resolve(__dirname, '../include');
+if (!existsSync(target)){
+    mkdirSync(target)
+}
 //do not download if version unchanged.
 const VERSION = "0.1.0";
 const FILE = `libspreadsheet-${VERSION}.so`;
